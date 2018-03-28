@@ -5,31 +5,48 @@ import matplotlib.pyplot as plt
 import image_data as img
 from   images import *
 
+#shape/image parameters
 N = [20,20]
 xmin = [0.,0.]
 xmax = [1.,1.]
-x0 = [0.2,0.5]
+x0 = [0.3,0.5]
+x1 = [0.5, 0.2]
 l, h = (.25,.25)
-R = 0.3
+R = 0.2
 delta = (xmax[0] - xmin[0] )/N[0]
 
-Rmax = int(min(N)*2./3.)
+offset = -1
 Rmax = min(N)
+circ = True
+rect = False
 
-#fig, ax = plt.subplots()
+#initialize image
 image = img.image_data(N,xmin,xmax)
-#rr, norm = image.transform_img(Rmax)
-norm = 0.
-image.add_circ(x0, R)
-x0 = [.75,.2]
-image.add_rect(x0, l, h)
+#add shapes
 
-image.show_img(cmap='inferno')
+if rect and circ :
+    image.add_circ(x0, R   )
+    image.add_rect(x1, l, h)
+elif circ :
+    image.add_circ(x0, R   )
+elif rect :
+    image.add_rect(x1, l, h)
 
-fig, ax = plt.subplots()
-rr, S = image.transform_img(Rmax)
-ax.plot(rr*delta,S-norm)
-#ax.set_aspect(aspect=1)
-ax.axhline(np.sum(.5*(image.image+1)), color='k', ls='--', label='total intensity')
-plt.legend()
+
+#########done with making image#########
+image.add_noise(0.02)
+image.normalize()
+intensity = np.sum(image.image+1)/2.
+
+#plotting
+fig, ax = plt.subplots(2)
+ax[0].set_aspect(aspect=1)
+ax[0].axis('off')
+image.show_img(ax[0])
+    
+
+#transform image
+rr, S = image.transform_img(Rmax,offset)
+ax[1].plot(rr*delta,S/intensity)
+
 plt.show()

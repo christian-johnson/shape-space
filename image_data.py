@@ -11,19 +11,16 @@ class image_data():
         x = np.linspace(xmin[0], xmax[0], N[0])
         y = np.linspace(xmin[1], xmax[1], N[1])
 
-        self.fig, self.ax = plt.subplots()
-        self.ax.axis('off')
-        self.ax.set_aspect(aspect=1)
         self.N = np.array(N)
-        self.image = np.zeros((N[0],N[1]))             
+        self.image = np.zeros((N[0],N[1])) - 1.             
         self.coord = [x, y]
 
     ##################################################
     ########## visualization #########################
 
-    def show_img(self, **kwargs):
+    def show_img(self, ax,  **kwargs):
         x, y = np.meshgrid(self.coord[0], self.coord[1])
-        self.ax.pcolor(x, y, self.image.T, **kwargs)
+        ax.pcolor(x, y, self.image.T, **kwargs)
 
     ##################################################
     ########## image manipulation ####################
@@ -33,6 +30,11 @@ class image_data():
         self.image -=    np.min(self.image)  #sets zero
         self.image *= 2./np.max(self.image)  #normalizes
         self.image -= 1.
+
+    def add_noise(self, amp):
+        noise = amp*(2.*np.random.rand(self.N[0],self.N[1])-1.)
+        self.image += noise
+        
     def add_circ(self, X, R   ):
         R2 = R**2
         X = np.array(X)
@@ -42,7 +44,7 @@ class image_data():
             for j in range(self.N[1]):
                 r2 = np.sum((X-np.array([x[i],y[j]]))**2)
                 if r2 <= R2 :
-                    self.image[i,j] += 1.
+                    self.image[i,j] = 1.
         #self.normalize()
         ###############
     def add_rect(self, X, l, h):
@@ -56,7 +58,7 @@ class image_data():
                 if (pt[0] > 0. and pt[1] > 0.):
                     if (pt[0] <= l and pt[1] <= h) :
                         #i,j is on the rectangle
-                        self.image[i,j] += 1
+                        self.image[i,j] = 1
         #self.normalize()
         ################################
 
@@ -85,8 +87,7 @@ class image_data():
         """
         xpix , ypix  = self.radiiPoints(R)
         N2 = int(len(xpix)/2)
-        #k = N2
-        #P1 = self.image[xpix , ypix ]
+        if k < 0 : k = N2
         xpix2, ypix2 = xpix[np.arange(-k, len(xpix)-k)], ypix[np.arange(-k, len(ypix)-k)]
         
         xpair  = xpix [(self.pt_in(xpix+i,ypix+j) & self.pt_in(xpix2+i,ypix2+j))]
@@ -106,7 +107,7 @@ class image_data():
         else :
             return 0.
 
-    def transform_img(self, Rmax, k):
+    def transform_img(self, Rmax, offset):
         '''
         transform to R, S space, up to max value Rmax with offset k
         '''
@@ -119,7 +120,7 @@ class image_data():
                 for r in rr:
                     #loop over
                     rind = r - 1
-                    if (self.image[i,j] > 0.25):
-                        S[rind] += abs(self.dotted_P(r, i, j,k))
+                    if (self.image[i,j] >= 0.):
+                        S[rind] += abs(self.dotted_P(r, i, j,offset))
         return(rr, S)
           
