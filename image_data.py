@@ -33,7 +33,18 @@ class image_data():
         self.image -=    np.min(self.image)  #sets zero
         self.image *= 2./np.max(self.image)  #normalizes
         self.image -= 1.
-
+    def add_circ(self, X, R   ):
+        R2 = R**2
+        X = np.array(X)
+        x = self.coord[0]
+        y = self.coord[1]
+        for i in range(self.N[0]):
+            for j in range(self.N[1]):
+                r2 = np.sum((X-np.array([x[i],y[j]]))**2)
+                if r2 <= R2 :
+                    self.image[i,j] += 1.
+        self.normalize
+        ###############
     def add_rect(self, X, l, h):
         X = np.array(X)
         x = self.coord[0]
@@ -68,12 +79,13 @@ class image_data():
     def pt_in(self, x, y):
         return (x >= 0) & (x < self.N[0]) & (y >= 0) & (y < self.N[1])
 
-    def dotted_P(self, R, i, j):
+    def dotted_P(self, R, i, j, k):
         """
         returns <P1|P2>(R) at pixel(i,j) with offset k
         """
         xpix , ypix  = self.radiiPoints(R)
-        k = int(len(xpix)/2)
+        N2 = int(len(xpix)/2)
+        k = N2
         #P1 = self.image[xpix , ypix ]
         xpix2, ypix2 = xpix[np.arange(-k, len(xpix)-k)], ypix[np.arange(-k, len(ypix)-k)]
         
@@ -85,7 +97,8 @@ class image_data():
         P1 = self.image[xpair , ypair ]
         P2 = self.image[xpair2, ypair2]
 
-        temp =  (np.cos(np.arccos(P1[:k])-np.arccos(P2[:k])))
+        #temp =  (np.cos(np.arccos(P1[:k])-np.arccos(P2[:k])))
+        temp = P1[:N2]*P2[:N2]
         if len(temp) > 0 :
             return np.sum(temp)/len(temp)
         else :
@@ -94,12 +107,14 @@ class image_data():
     def transform_img(self, Rmax):
         rr = np.arange(1,Rmax+1)
         S =  np.zeros(Rmax)
+        k = 3
         for i in range(self.N[0]):
             for j in range(self.N[1]):
                 # loop over pixels
                 for r in rr:
                     #loop over
                     rind = r - 1
-                    S[rind] += abs(self.dotted_P(r, i, j))
+                    if (self.image[i,j] > 0.):
+                        S[rind] += abs(self.dotted_P(r, i, j,k))
         return(rr, S)
           
