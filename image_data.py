@@ -43,7 +43,7 @@ class image_data():
                 r2 = np.sum((X-np.array([x[i],y[j]]))**2)
                 if r2 <= R2 :
                     self.image[i,j] += 1.
-        self.normalize
+        #self.normalize()
         ###############
     def add_rect(self, X, l, h):
         X = np.array(X)
@@ -57,7 +57,7 @@ class image_data():
                     if (pt[0] <= l and pt[1] <= h) :
                         #i,j is on the rectangle
                         self.image[i,j] += 1
-        self.normalize()
+        #self.normalize()
         ################################
 
     ##################################################
@@ -85,7 +85,7 @@ class image_data():
         """
         xpix , ypix  = self.radiiPoints(R)
         N2 = int(len(xpix)/2)
-        k = N2
+        #k = N2
         #P1 = self.image[xpix , ypix ]
         xpix2, ypix2 = xpix[np.arange(-k, len(xpix)-k)], ypix[np.arange(-k, len(ypix)-k)]
         
@@ -97,24 +97,29 @@ class image_data():
         P1 = self.image[xpair , ypair ]
         P2 = self.image[xpair2, ypair2]
 
-        #temp =  (np.cos(np.arccos(P1[:k])-np.arccos(P2[:k])))
-        temp = P1[:N2]*P2[:N2]
+        temp = 1-np.abs(P1[:N2]-P2[:N2])
+        #temp = np.cos(np.arccos(P1[:N2])-np.arccos(P2[:N2]))
+        #temp = P1[:N2]*P2[:N2]
+
         if len(temp) > 0 :
             return np.sum(temp)/len(temp)
         else :
             return 0.
 
-    def transform_img(self, Rmax):
+    def transform_img(self, Rmax, k):
+        '''
+        transform to R, S space, up to max value Rmax with offset k
+        '''
         rr = np.arange(1,Rmax+1)
         S =  np.zeros(Rmax)
-        k = 3
+
         for i in range(self.N[0]):
             for j in range(self.N[1]):
                 # loop over pixels
                 for r in rr:
                     #loop over
                     rind = r - 1
-                    if (self.image[i,j] > 0.):
+                    if (self.image[i,j] > 0.25):
                         S[rind] += abs(self.dotted_P(r, i, j,k))
         return(rr, S)
           
